@@ -1,0 +1,112 @@
+1. Export MySql table into .xml file:
+mysql --xml -u saiteja -h 138.68.140.83 -pSaiteja@123 -D dbSaiTeja -e "SELECT * FROM BillDetail" > XMLDump.xml
+
+2. Export Oracle table into .xml file:
+   select xmltype(cursor(select * from BillDetail)).getClobVal() xdoc from dual
+
+3. Export Sqlite3 table into .csv file:
+sqlite3 dbSaiteja -header -csv "SELECT * FROM Item" > sqliteDump.csv
+
+4. Import XML Data into Oracle Table:
+
+CREATE TABLE BillDetail (
+    BillNumber VARCHAR2(50),
+    ItemID VARCHAR2(50),
+    SoldQuantity NUMBER
+);
+
+
+ DECLARE
+    <resultset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" statement="SELECT * FROM BillDetail ">
+<row>
+<field name="BillNumber">1000</field>
+<field name="ItemId">AC1356</field>
+<field name="SoldQuantity">1</field>
+</row>
+<row>
+<field name="BillNumber">1000</field>
+<field name="ItemId">Fri13dge</field>
+<field name="SoldQuantity">9</field>
+</row>
+<row>
+<field name="BillNumber">1001</field>
+<field name="ItemId">TV1398</field>
+<field name="SoldQuantity">1</field>
+</row>
+<row>
+<field name="BillNumber">1002</field>
+<field name="ItemId">Fri13dge</field>
+<field name="SoldQuantity">1</field>
+</row>
+<row>
+<field name="BillNumber">1003</field>
+<field name="ItemId">AC1398P</field>
+<field name="SoldQuantity">2</field>
+</row>
+<row>
+<field name="BillNumber">1004</field>
+<field name="ItemId">Lap12top</field>
+<field name="SoldQuantity">2</field>
+</row>
+<row>
+<field name="BillNumber">1005</field>
+<field name="ItemId">Lap12top</field>
+<field name="SoldQuantity">3</field>
+</row>
+<row>
+<field name="BillNumber">1006</field>
+<field name="ItemId">AC1398P</field>
+<field name="SoldQuantity">5</field>
+</row>
+<row>
+<field name="BillNumber">1007</field>
+<field name="ItemId">AC1398P</field>
+<field name="SoldQuantity">2</field>
+</row>
+<row>
+<field name="BillNumber">1008</field>
+<field name="ItemId">WashM1356</field>
+<field name="SoldQuantity">1</field>
+</row>
+<row>
+<field name="BillNumber">1009</field>
+<field name="ItemId">AC1356</field>
+<field name="SoldQuantity">2</field>
+</row>
+</resultset>
+BEGIN
+    -- Use XMLTABLE to parse and insert data
+    INSERT INTO BillDetail (BillNumber, ItemID, SoldQuantity)
+    SELECT
+        x.BillNumber,
+        x.ItemID,
+        x.SoldQuantity
+    FROM
+        XMLTABLE(
+            '/resultset/row'
+            PASSING xml_data
+            COLUMNS
+                BillNumber VARCHAR2(50) PATH 'field[@name="BillNumber"]/text()',
+                ItemID VARCHAR2(50) PATH 'field[@name="ItemID"]/text()',
+                SoldQuantity NUMBER PATH 'field[@name="SoldQuantity"]/text()'
+        ) x;
+
+    COMMIT;
+END;
+
+5. Import xml data into MySQL table
+
+LOAD XML LOCAL INFILE 'D:\Sai\MySQL\XMLDump.xml' INTO TABLE BillDetails ROWS IDENTIFIED BY '<row>';
+
+
+6. Import csv file data into Sqlite table:
+
+CREATE TABLE BillDetail (
+    itemId INTEGER,
+    itemName TEXT,
+    itemPrice REAL
+);
+
+.mode csv
+.import data.csv BillDetail
+SELECT * FROM BillDetail;
